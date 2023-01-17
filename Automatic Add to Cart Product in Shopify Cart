@@ -1,0 +1,68 @@
+<script>
+  $(function(){
+    // *************************************PRE DECLARE VARIABLE*************************************
+    var cartUpdated = false;
+    
+    // *************************************CREATE CUSTOM DISCOUNT*************************************
+    var customDiscount = {
+    
+      // Get Y Product
+      freeProduct : 42069950562475, //Enter your free product variant ID
+  
+      // APPLY DISCOUNT on Y PRODUCT by QUANTITY
+      freeProductQuantity: 1, //Enter your free product quantity
+    }
+    
+    // *************************************UPDATE CART DATA(BY AJAX)  we create function to update cart**************************************
+    function updateCart(productId, productQty){
+      updateCartData = {
+        updates: {
+          [productId]: productQty,
+        },
+      };
+      $.ajax({
+        url: '/cart/update.js',
+        type: 'POST',
+        dataType: 'json',
+        async: false,
+        data: updateCartData,
+        success: function(data,status,xhr) {
+        	window.location.reload();
+        },
+        error: function(data,status,xhr) {
+        	// window.location.reload();
+        }
+      });
+    }
+  
+    // *************************************GET CART DATA(BY AJAX)  inside this AJAX we update our CART**************************************
+    $.ajax({
+      url:"/cart.js",  
+      success:function(cartData) {
+        var cartData = JSON.parse(cartData);
+        var cartItems = cartData.items;
+        var totalCartItems = cartItems.length;
+        var subtotal = cartData.items_subtotal_price / 100;
+        
+        for(cartItemKey in cartItems){
+          var cartItem = cartItems[cartItemKey];
+  
+          // CHECK FREE PRODUCT IN CART or NOT
+          if(cartItem.id == customDiscount.freeProduct){
+            var freeProductInCart = true;
+            var freeProductInQty = cartItem.quantity;
+          }
+        }
+        
+        //Here condition checking if cart total is greater than $50
+        if(subtotal > 50){
+          if(!freeProductInCart || (freeProductInCart && (freeProductInQty != customDiscount.freeProductQuantity))){
+            updateCart(customDiscount.freeProduct, 1);
+            cartUpdated = true;
+          }
+          
+        }
+      }
+    });
+  });
+</script>
